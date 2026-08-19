@@ -160,7 +160,9 @@ const PRESET_EXERCISES = [
   ["ベンチプレス","胸"], ["スクワット","脚"], ["デッドリフト","背中"],
   ["ショルダープレス","肩"], ["ラットプルダウン","背中"], ["レッグプレス","脚"],
   ["アームカール","腕"], ["レッグカール","脚"], ["チェストプレス","胸"],
-  ["ローイング","背中"], ["サイドレイズ","肩"], ["カーフレイズ","脚"]
+  ["ローイング","背中"], ["サイドレイズ","肩"], ["カーフレイズ","脚"],
+  ["トライセプスプレスダウン","腕"], ["チンディップアシスト","背中・胸"],
+  ["ヒップアブダクション","脚"], ["ヒップアダクション","脚"]
 ];
 
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
@@ -181,6 +183,11 @@ try{
   const raw = localStorage.getItem(STORE_KEY);
   S = raw ? JSON.parse(raw) : defaultState();
 }catch(e){ S = defaultState(); STORE_OK = false; }
+
+// 新しく増えたプリセット種目を、既存データにも追加しておく
+for(const [name,muscle] of PRESET_EXERCISES){
+  if(!S.exercises.some(x=>x.name===name)) S.exercises.push({id:uid(),name,muscle,preset:true});
+}
 
 function save(){
   try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }
@@ -286,11 +293,12 @@ function renderHome(){
   el("v-home").innerHTML = `
   ${!STORE_OK?`<div class="card" style="border-color:#4A2A2A"><b style="color:var(--danger)">保存できません。</b> <span class="ink2">端末のストレージ設定をご確認ください。</span></div>`:""}
 
-  <div class="stat-row" style="margin-bottom:14px">
+  <div class="stat-row" style="margin-bottom:6px">
     <div class="stat accent"><div class="n">${vol.toLocaleString()}</div><div class="l">総ボリューム(kg)</div></div>
     <div class="stat"><div class="n">${entries.length}</div><div class="l">種目</div></div>
     <div class="stat"><div class="n">${setCount}</div><div class="l">セット</div></div>
   </div>
+  <p style="font-size:11.5px;color:var(--ink3);font-weight:600;margin:0 0 14px">総ボリューム = 重量×回数をすべてのセットで足した合計</p>
 
   ${entries.length===0?`
   <div class="card empty">
@@ -326,7 +334,7 @@ function renderEntry(entry, ei){
       ${pr>0?`　自己ベスト：<b>${fmtW(pr)}kg</b>`:""}
     </div>
     ${entry.sets.map((set,si)=>renderSetRow(entry,ei,set,si,pr)).join("")}
-    <button class="addset" data-addset="${ei}">${icon("plus",14)} セットを追加</button>
+    <button class="addset" data-addset="${ei}">${icon("plus",14)} 同じ重量・回数でセット追加</button>
   </div>`;
 }
 
