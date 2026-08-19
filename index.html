@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0B0B0D">
+<meta name="color-scheme" content="dark">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ジムログ">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Inter:wght@500;600;700;800&display=swap">
+<title>ジムログ</title>
+<style>
+:root{
+  --bg:#0B0B0D; --bg2:#131316; --panel:#1B1C21; --panel2:#232429; --line:#2E3038;
+  --ink:#F2F3F5; --ink2:#A8ABB4; --ink3:#6C6F79;
+  --accent:#C6FF3D; --accent2:#9FE01F; --accent-ink:#0F1400;
+  --danger:#FF5C5C; --info:#4FD6FF;
+  --sans:"Inter",-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  --num:"Barlow Condensed","Inter",sans-serif;
+  --r:16px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:var(--sans); font-size:16px; line-height:1.6; font-weight:500;
+  padding-bottom:calc(92px + env(safe-area-inset-bottom)); -webkit-text-size-adjust:100%;
+}
+h1,h2,h3{font-weight:800;letter-spacing:.01em;line-height:1.3;margin:0}
+button,input,select,textarea{font-family:inherit;font-size:16px;color:inherit;font-weight:600}
+button{cursor:pointer;border:none;background:none}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+header.top{
+  padding:16px 18px 12px;background:var(--bg2);border-bottom:1px solid var(--line);
+  position:sticky;top:0;z-index:20;padding-top:max(16px,env(safe-area-inset-top));
+}
+header.top .brand{font-family:var(--num);font-size:24px;font-weight:800;letter-spacing:.04em;
+  display:flex;align-items:center;gap:8px}
+header.top .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 10px var(--accent)}
+header.top .sub{font-size:13px;color:var(--ink3);font-weight:600;margin-top:2px}
+
+main{padding:16px 15px 8px;max-width:640px;margin:0 auto}
+.view{display:none}.view.on{display:block;animation:fade .2s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+
+nav.tabs{
+  position:fixed;bottom:0;left:0;right:0;z-index:30;display:flex;
+  background:rgba(19,19,22,.97);backdrop-filter:blur(14px);
+  border-top:1px solid var(--line);padding:8px 5px calc(8px + env(safe-area-inset-bottom));
+}
+nav.tabs button{flex:1;padding:9px 2px;color:var(--ink3);font-size:12px;font-weight:700;
+  display:flex;flex-direction:column;align-items:center;gap:4px;border-radius:14px;min-height:56px}
+nav.tabs button .g{width:22px;height:22px}
+nav.tabs button[aria-current="true"]{color:var(--accent-ink);background:linear-gradient(180deg,var(--accent),var(--accent2))}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.eyebrow{font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--ink3);text-transform:uppercase;margin-bottom:8px}
+.stat-row{display:flex;gap:10px}
+.stat{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;text-align:center}
+.stat .n{font-family:var(--num);font-size:32px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.stat .l{font-size:11.5px;color:var(--ink3);font-weight:700;margin-top:4px}
+.stat.accent .n{color:var(--accent)}
+
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+  background:linear-gradient(180deg,var(--accent),var(--accent2));color:var(--accent-ink);
+  font-weight:800;font-size:16px;border-radius:14px;padding:15px 0;min-height:52px}
+.btn.ghost{background:var(--panel2);color:var(--ink);border:1px solid var(--line)}
+.btn.block{margin-top:4px}
+.btn.sm{padding:10px 14px;min-height:40px;font-size:14px;width:auto}
+.btn.danger{background:var(--panel2);color:var(--danger);border:1px solid #4A2A2A}
+
+.exentry{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.exentry .head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px}
+.exentry .name{font-size:17px;font-weight:800}
+.exentry .muscle{font-size:11.5px;color:var(--ink3);font-weight:700}
+.exentry .rm{color:var(--ink3);padding:6px}
+.exentry .ref{font-size:13px;color:var(--ink2);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.exentry .ref b{color:var(--ink)}
+
+.setrow{display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.setrow .idx{width:16px;font-family:var(--num);font-size:14px;color:var(--ink3);font-weight:700;text-align:center;flex-shrink:0}
+.stepper{display:flex;align-items:stretch;background:var(--bg2);border:1px solid var(--line);border-radius:12px;overflow:hidden;flex:1;min-width:0}
+.stepper button{width:30px;height:44px;font-size:18px;font-weight:800;color:var(--ink2);flex-shrink:0}
+.stepper button:active{background:var(--panel2)}
+.stepper .sval{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1;gap:2px}
+.stepper .sval input{width:100%;min-width:0;text-align:center;background:transparent;border:none;font-family:var(--num);
+  font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;padding:0}
+.stepper .sval span{font-size:9px;color:var(--ink3);font-weight:700}
+.setrow .pr{color:var(--accent);flex-shrink:0;width:18px}
+.setrow .del{color:var(--ink3);flex-shrink:0;width:26px;height:26px;display:flex;align-items:center;justify-content:center}
+
+.addset{width:100%;padding:10px 0;border:1.5px dashed var(--line);border-radius:12px;color:var(--ink2);
+  font-weight:700;font-size:13.5px;margin-top:2px}
+
+.empty{text-align:center;padding:40px 20px;color:var(--ink3)}
+.empty .g{margin:0 auto 12px;opacity:.6}
+.empty p{font-size:14px;font-weight:600}
+
+.sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:flex;align-items:flex-end}
+.sheet-bg:empty{display:none}
+.sheet{width:100%;max-height:80vh;overflow-y:auto;background:var(--bg2);border-top-left-radius:24px;
+  border-top-right-radius:24px;padding:18px 18px calc(18px + env(safe-area-inset-bottom));animation:up .22s ease}
+@keyframes up{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.sheet .row1{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sheet .row1 h3{font-size:19px}
+.sheet input.search{width:100%;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:12px 14px;font-size:15px;margin-bottom:12px}
+.exgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.exgrid button{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 10px;
+  text-align:left}
+.exgrid button .n{font-size:14.5px;font-weight:800;display:block}
+.exgrid button .m{font-size:11px;color:var(--ink3);font-weight:700}
+
+.chipbar{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px}
+.chipbar::-webkit-scrollbar{display:none}
+.chipbar button{flex-shrink:0;padding:9px 15px;border-radius:999px;background:var(--panel);
+  border:1px solid var(--line);color:var(--ink2);font-size:14px;font-weight:700;white-space:nowrap}
+.chipbar button[aria-current="true"]{background:linear-gradient(180deg,var(--accent),var(--accent2));
+  color:var(--accent-ink);border-color:transparent}
+
+.chart{width:100%;height:120px;display:block}
+.histitem{border-top:1px solid var(--line);padding:12px 0}
+.histitem:first-child{border-top:none;padding-top:0}
+.histitem .d{font-size:12.5px;color:var(--ink3);font-weight:700;margin-bottom:6px}
+.histitem .sets{font-family:var(--num);font-size:16px;font-weight:700;font-variant-numeric:tabular-nums}
+.toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%);background:var(--accent);
+  color:var(--accent-ink);font-weight:800;font-size:14px;padding:11px 20px;border-radius:999px;
+  z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.4);animation:toastin .18s ease}
+@keyframes toastin{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand"><span class="dot"></span>ジムログ</div>
+  <div class="sub" id="hdr-sub"></div>
+</header>
+
+<main>
+  <section id="v-home" class="view on"></section>
+  <section id="v-progress" class="view"></section>
+</main>
+
+<nav class="tabs" id="tabs"></nav>
+<div id="sheet" class="sheet-bg"></div>
+<div id="toastwrap"></div>
+
+<script>
+/* ---------- state ---------- */
+const STORE_KEY = "gymlog_v1";
+let STORE_OK = true;
+const PRESET_EXERCISES = [
+  ["ベンチプレス","胸"], ["スクワット","脚"], ["デッドリフト","背中"],
+  ["ショルダープレス","肩"], ["ラットプルダウン","背中"], ["レッグプレス","脚"],
+  ["アームカール","腕"], ["レッグカール","脚"], ["チェストプレス","胸"],
+  ["ローイング","背中"], ["サイドレイズ","肩"], ["カーフレイズ","脚"]
+];
+
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function pad(n){ return String(n).padStart(2,"0"); }
+function md(dateStr){ const [y,m,d]=dateStr.split("-"); return Number(m)+"/"+Number(d); }
+function el(id){ return document.getElementById(id); }
+function h(s){ return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+function defaultState(){
+  return {
+    exercises: PRESET_EXERCISES.map(([name,muscle])=>({id:uid(),name,muscle,preset:true})),
+    sessions: []
+  };
+}
+let S;
+try{
+  const raw = localStorage.getItem(STORE_KEY);
+  S = raw ? JSON.parse(raw) : defaultState();
+}catch(e){ S = defaultState(); STORE_OK = false; }
+
+function save(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }
+  catch(e){ STORE_OK = false; }
+}
+
+/* ---------- data helpers ---------- */
+function exById(id){ return S.exercises.find(x=>x.id===id); }
+function todaySession(create){
+  let s = S.sessions.find(x=>x.date===todayStr());
+  if(!s && create){ s = {id:uid(), date:todayStr(), entries:[]}; S.sessions.push(s); }
+  return s;
+}
+function pastSessionsFor(exId, beforeDate){
+  return S.sessions
+    .filter(s=>s.date<beforeDate && s.entries.some(e=>e.exerciseId===exId))
+    .sort((a,b)=>a.date<b.date?1:-1);
+}
+function allSessionsFor(exId){
+  return S.sessions
+    .filter(s=>s.entries.some(e=>e.exerciseId===exId))
+    .sort((a,b)=>a.date<b.date?1:-1);
+}
+function maxWeightInEntry(entry){
+  return entry.sets.reduce((m,s)=>Math.max(m, Number(s.weight)||0), 0);
+}
+function prFor(exId, beforeDate){
+  let best = 0;
+  for(const s of S.sessions){
+    if(beforeDate && s.date>=beforeDate) continue;
+    for(const e of s.entries){ if(e.exerciseId===exId) best=Math.max(best, maxWeightInEntry(e)); }
+  }
+  return best;
+}
+function lastEntryFor(exId){
+  const past = pastSessionsFor(exId, todayStr());
+  if(!past.length) return null;
+  const s = past[0];
+  const entry = s.entries.find(e=>e.exerciseId===exId);
+  return {date:s.date, entry};
+}
+function setsSummary(entry){
+  return entry.sets.map(s=>`${fmtW(s.weight)}×${s.reps||0}`).join("  ");
+}
+function fmtW(w){ w=Number(w)||0; return (w%1===0)?String(w):w.toFixed(1); }
+function totalVolume(session){
+  if(!session) return 0;
+  let v=0;
+  for(const e of session.entries) for(const s of e.sets) v += (Number(s.weight)||0)*(Number(s.reps)||0);
+  return Math.round(v);
+}
+function recentExerciseOrder(){
+  const lastUsed = {};
+  for(const s of S.sessions) for(const e of s.entries) lastUsed[e.exerciseId] = s.date;
+  return [...S.exercises].sort((a,b)=>{
+    const la=lastUsed[a.id]||"", lb=lastUsed[b.id]||"";
+    if(la!==lb) return la<lb?1:-1;
+    return a.name.localeCompare(b.name,"ja");
+  });
+}
+
+/* ---------- icons ---------- */
+const ICONS = {
+  plus:'<path d="M12 4v16M4 12h16" stroke-linecap="round"/>',
+  dumbbell:'<path d="M4 9v6M2 10v4M20 9v6M22 10v4M7 8v8M17 8v8M7 12h10" stroke-linecap="round" stroke-linejoin="round"/>',
+  trend:'<path d="M4 17 10 11 14 15 20 7" stroke-linecap="round" stroke-linejoin="round"/><path d="M15 7h5v5" stroke-linecap="round" stroke-linejoin="round"/>',
+  flame:'<path d="M12 2.5c1.2 3-1.4 4.2-1.4 6.9a3.4 3.4 0 0 0 6.8 0c0-1-.4-1.8-.8-2.4 1.5.5 2.5 2.1 2.5 4.1a5.1 5.1 0 0 1-10.2 0c0-4.2 2.5-6 3.1-8.6Z" stroke-linejoin="round"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18" stroke-linecap="round"/>',
+  trash:'<path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" stroke-linecap="round" stroke-linejoin="round"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4" stroke-linecap="round"/>'
+};
+function icon(name,size){
+  return `<svg viewBox="0 0 24 24" width="${size||20}" height="${size||20}" fill="none" stroke="currentColor" stroke-width="2">${ICONS[name]||""}</svg>`;
+}
+
+/* ---------- tabs / router ---------- */
+const TABS = [["home","dumbbell","記録"],["progress","trend","推移"]];
+let cur = "home";
+function tabs(){
+  el("tabs").innerHTML = TABS.map(([k,g,n])=>
+    `<button data-go="${k}" aria-current="${cur===k}">${icon(g,22)}<span>${n}</span></button>`).join("");
+}
+function go(k){ cur=k; render(); window.scrollTo(0,0); }
+function render(){
+  tabs();
+  document.querySelectorAll(".view").forEach(v=>v.classList.remove("on"));
+  el("v-"+cur).classList.add("on");
+  if(cur==="home") renderHome();
+  if(cur==="progress") renderProgress();
+  const s = todaySession(false);
+  el("hdr-sub").textContent = STORE_OK
+    ? `今日 ${md(todayStr())}・総ボリューム ${totalVolume(s).toLocaleString()}kg`
+    : "この端末では記録を保存できません";
+}
+
+/* ---------- home ---------- */
+function renderHome(){
+  const s = todaySession(false);
+  const entries = s ? s.entries : [];
+  const vol = totalVolume(s);
+  const setCount = entries.reduce((n,e)=>n+e.sets.length,0);
+
+  el("v-home").innerHTML = `
+  ${!STORE_OK?`<div class="card" style="border-color:#4A2A2A"><b style="color:var(--danger)">保存できません。</b> <span class="ink2">端末のストレージ設定をご確認ください。</span></div>`:""}
+
+  <div class="stat-row" style="margin-bottom:14px">
+    <div class="stat accent"><div class="n">${vol.toLocaleString()}</div><div class="l">総ボリューム(kg)</div></div>
+    <div class="stat"><div class="n">${entries.length}</div><div class="l">種目</div></div>
+    <div class="stat"><div class="n">${setCount}</div><div class="l">セット</div></div>
+  </div>
+
+  ${entries.length===0?`
+  <div class="card empty">
+    <div class="g">${icon("dumbbell",40)}</div>
+    <p>今日はまだ記録がありません。<br>種目を追加して始めましょう。</p>
+  </div>`:entries.map((e,ei)=>renderEntry(e,ei)).join("")}
+
+  <button class="btn block" data-addex="1">${icon("plus",19)} 種目を追加</button>
+  `;
+}
+
+function renderEntry(entry, ei){
+  const ex = exById(entry.exerciseId);
+  const last = lastEntryFor(entry.exerciseId);
+  const pr = prFor(entry.exerciseId, todayStr());
+  const curMax = maxWeightInEntry(entry);
+  const hitPr = pr>0 && curMax>pr;
+  return `
+  <div class="exentry">
+    <div class="head">
+      <div>
+        <div class="name">${h(ex?ex.name:"（削除済み）")}</div>
+        ${ex?`<div class="muscle">${h(ex.muscle)}</div>`:""}
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        ${hitPr?`<span class="pr" title="自己ベスト更新">${icon("flame",20)}</span>`:""}
+        <button class="rm" data-rmentry="${ei}">${icon("x",18)}</button>
+      </div>
+    </div>
+    <div class="ref">
+      ${last?`${icon("trend",14)} 前回(${md(last.date)})：<b>${setsSummary(last.entry)}</b>`
+        :`${icon("trend",14)} 初めての種目です`}
+      ${pr>0?`　自己ベスト：<b>${fmtW(pr)}kg</b>`:""}
+    </div>
+    ${entry.sets.map((set,si)=>renderSetRow(entry,ei,set,si,pr)).join("")}
+    <button class="addset" data-addset="${ei}">${icon("plus",14)} セットを追加</button>
+  </div>`;
+}
+
+function renderSetRow(entry, ei, set, si, pr){
+  const w = Number(set.weight)||0;
+  const isPr = pr>0 && w>pr;
+  return `
+  <div class="setrow">
+    <div class="idx">${si+1}</div>
+    <div class="stepper">
+      <button data-w="${ei}:${si}:-1">−</button>
+      <div class="sval"><input type="number" inputmode="decimal" value="${set.weight}" data-wi="${ei}:${si}"><span>kg</span></div>
+      <button data-w="${ei}:${si}:1">＋</button>
+    </div>
+    <div class="stepper">
+      <button data-r="${ei}:${si}:-1">−</button>
+      <div class="sval"><input type="number" inputmode="numeric" value="${set.reps}" data-ri="${ei}:${si}"><span>回</span></div>
+      <button data-r="${ei}:${si}:1">＋</button>
+    </div>
+    ${isPr?`<span class="pr">${icon("flame",16)}</span>`:`<span class="pr"></span>`}
+    <button class="del" data-rmset="${ei}:${si}">${icon("trash",15)}</button>
+  </div>`;
+}
+
+/* ---------- add exercise sheet ---------- */
+let exQuery = "";
+function openAddExercise(){
+  exQuery = "";
+  el("sheet").innerHTML = `<div class="sheet">
+    <div class="row1"><h3>種目を追加</h3><button class="rm" data-close="1">${icon("x",22)}</button></div>
+    <input class="search" id="ex-search" placeholder="種目名で検索、または新しく入力" value="">
+    <div class="exgrid" id="ex-grid"></div>
+    <button class="btn ghost block" id="ex-custom" style="display:none"></button>
+  </div>`;
+  renderExGrid();
+  el("ex-search").addEventListener("input", e=>{ exQuery=e.target.value; renderExGrid(); });
+  el("ex-search").focus();
+}
+function renderExGrid(){
+  const q = exQuery.trim();
+  const list = recentExerciseOrder().filter(x=>!q || x.name.includes(q));
+  el("ex-grid").innerHTML = list.map(x=>
+    `<button data-pickex="${x.id}"><span class="n">${h(x.name)}</span><span class="m">${h(x.muscle)}</span></button>`
+  ).join("") || `<p class="small mut" style="grid-column:1/-1;color:var(--ink3)">一致する種目がありません</p>`;
+  const customBtn = el("ex-custom");
+  if(q && !S.exercises.some(x=>x.name===q)){
+    customBtn.style.display = "flex";
+    customBtn.innerHTML = `${icon("plus",16)} 「${h(q)}」を新しい種目として追加`;
+    customBtn.onclick = ()=> addCustomExercise(q);
+  } else {
+    customBtn.style.display = "none";
+  }
+}
+function addCustomExercise(name){
+  const ex = {id:uid(), name, muscle:"自由入力", preset:false};
+  S.exercises.push(ex);
+  save();
+  addExerciseToToday(ex.id);
+}
+function addExerciseToToday(exId){
+  const s = todaySession(true);
+  if(!s.entries.some(e=>e.exerciseId===exId)){
+    const last = lastEntryFor(exId);
+    const firstSet = last ? {...last.entry.sets[0]} : {weight:0, reps:8};
+    s.entries.push({exerciseId:exId, sets:[firstSet]});
+  }
+  save();
+  closeSheet();
+  render();
+}
+function closeSheet(){ el("sheet").innerHTML = ""; }
+
+/* ---------- progress tab ---------- */
+let progState = { exId:null };
+function renderProgress(){
+  const used = S.exercises.filter(x=>allSessionsFor(x.id).length>0);
+  if(!progState.exId && used.length) progState.exId = recentExerciseOrder().find(x=>allSessionsFor(x.id).length>0)?.id;
+
+  if(!used.length){
+    el("v-progress").innerHTML = `<div class="card empty">
+      <div class="g">${icon("trend",40)}</div>
+      <p>記録がたまると、種目別の推移がここに出ます。</p>
+    </div>`;
+    return;
+  }
+
+  const ordered = recentExerciseOrder().filter(x=>used.includes(x));
+  const exId = progState.exId;
+  const hist = allSessionsFor(exId);
+  const pr = prFor(exId, null);
+  const series = hist.slice(0,12).reverse().map(s=>({
+    date:s.date, w: maxWeightInEntry(s.entries.find(e=>e.exerciseId===exId))
+  }));
+
+  el("v-progress").innerHTML = `
+  <div class="chipbar">${ordered.map(x=>
+    `<button data-selex="${x.id}" aria-current="${x.id===exId}">${h(x.name)}</button>`).join("")}</div>
+
+  <div class="stat-row" style="margin-bottom:14px">
+    <div class="stat accent"><div class="n">${fmtW(pr)}</div><div class="l">自己ベスト(kg)</div></div>
+    <div class="stat"><div class="n">${hist.length}</div><div class="l">実施回数</div></div>
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">重量の推移</div>
+    ${series.length>=2 ? chartSvg(series) : `<p style="color:var(--ink3);font-size:13.5px">2回分記録がたまるとグラフが出ます</p>`}
+  </div>
+
+  <div class="card">
+    <div class="eyebrow">履歴</div>
+    ${hist.map(s=>{
+      const e = s.entries.find(e=>e.exerciseId===exId);
+      return `<div class="histitem"><div class="d">${md(s.date)}</div><div class="sets">${setsSummary(e)}</div></div>`;
+    }).join("")}
+  </div>`;
+}
+function chartSvg(series){
+  const W=580,H=120,pad=10;
+  const ws = series.map(s=>s.w);
+  const min = Math.min(...ws), max = Math.max(...ws);
+  const range = (max-min)||1;
+  const stepX = (W-pad*2)/(series.length-1);
+  const pts = series.map((s,i)=>{
+    const x = pad + i*stepX;
+    const y = H-pad - ((s.w-min)/range)*(H-pad*2);
+    return [x,y];
+  });
+  const path = pts.map((p,i)=>(i===0?"M":"L")+p[0].toFixed(1)+","+p[1].toFixed(1)).join(" ");
+  const dots = pts.map((p,i)=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="${i===pts.length-1?5:3}" fill="${i===pts.length-1?"var(--accent)":"var(--ink3)"}"/>`).join("");
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="overflow:visible">
+    <path d="${path}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    ${dots}
+  </svg>`;
+}
+
+/* ---------- events ---------- */
+function toast(msg){
+  const t = document.createElement("div");
+  t.className = "toast"; t.textContent = msg;
+  el("toastwrap").appendChild(t);
+  setTimeout(()=>t.remove(), 1800);
+}
+
+document.addEventListener("click", e=>{
+  if(e.target && e.target.id==="sheet"){ closeSheet(); return; }
+  const t = e.target.closest("[data-go],[data-addex],[data-close],[data-pickex],[data-rmentry],[data-addset],[data-rmset],[data-w],[data-r],[data-selex]");
+  if(!t) return;
+  const D = t.dataset;
+
+  if(D.go){ go(D.go); return; }
+  if(D.addex!==undefined){ openAddExercise(); return; }
+  if(D.close!==undefined){ closeSheet(); return; }
+  if(D.pickex){ addExerciseToToday(D.pickex); return; }
+  if(D.selex){ progState.exId=D.selex; renderProgress(); return; }
+
+  if(D.rmentry!==undefined){
+    const s = todaySession(false); if(!s) return;
+    s.entries.splice(Number(D.rmentry),1); save(); renderHome(); return;
+  }
+  if(D.addset!==undefined){
+    const s = todaySession(false); if(!s) return;
+    const entry = s.entries[Number(D.addset)];
+    const last = entry.sets[entry.sets.length-1] || {weight:0,reps:8};
+    entry.sets.push({...last});
+    save(); renderHome(); return;
+  }
+  if(D.rmset){
+    const [ei,si] = D.rmset.split(":").map(Number);
+    const s = todaySession(false); if(!s) return;
+    const entry = s.entries[ei];
+    if(entry.sets.length<=1){ toast("最後の1セットは削除できません"); return; }
+    entry.sets.splice(si,1); save(); renderHome(); return;
+  }
+  if(D.w){
+    const [ei,si,d] = D.w.split(":").map(Number);
+    const s = todaySession(false); if(!s) return;
+    const set = s.entries[ei].sets[si];
+    set.weight = Math.max(0, (Number(set.weight)||0) + d*2.5);
+    save(); renderHome(); return;
+  }
+  if(D.r){
+    const [ei,si,d] = D.r.split(":").map(Number);
+    const s = todaySession(false); if(!s) return;
+    const set = s.entries[ei].sets[si];
+    set.reps = Math.max(0, (Number(set.reps)||0) + d);
+    save(); renderHome(); return;
+  }
+});
+
+document.addEventListener("change", e=>{
+  if(e.target.dataset.wi){
+    const [ei,si] = e.target.dataset.wi.split(":").map(Number);
+    const s = todaySession(false); if(!s) return;
+    s.entries[ei].sets[si].weight = Math.max(0, Number(e.target.value)||0);
+    save(); renderHome();
+  }
+  if(e.target.dataset.ri){
+    const [ei,si] = e.target.dataset.ri.split(":").map(Number);
+    const s = todaySession(false); if(!s) return;
+    s.entries[ei].sets[si].reps = Math.max(0, Number(e.target.value)||0);
+    save(); renderHome();
+  }
+});
+
+render();
+
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  navigator.serviceWorker.register("sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
